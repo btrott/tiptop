@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/reset-fonts-grids/reset-fonts-grids.css">
+    <link rel="stylesheet" type="text/css" href="/css/styles.css" />
+    <title>Dashboard</title>
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta http-equiv="imagetoolbar" content="false" />
+</head>
+<body class="home">
+    <div id="doc3">
+    
+        <div id="hd">
+[%- USE today = DateTime( today = 1 );
+    yesterday = today.subtract( days => 1 ) -%]
+            <div class="brand">
+                <div class="container">
+                    <strong><a href="http://www.typepad.com/">TypePad</a></strong> /
+                    Dashboard
+                </div>
+            </div>
+        </div>
+        
+        <div id="bd">
+            <div class="container">
+                <div class="box">
+[%- FOR asset IN assets %]
+    [%- IF param.debug %]<pre>[% USE Dumper; Dumper.dump( asset.content ) %]</pre>[%- END %]
+                    <div class="yui-gf">
+                        <div class="details yui-u first">
+                            <p class="creator">
+                                <a href="http://profile.typepad.com/[% asset.author.urlId | html %]"><img src="[% asset.author.avatar_uri | html %]" alt="[% asset.author.displayName | html %]" height="50" width="50" /></a><br />
+                                <span class="screenname"><a href="http://profile.typepad.com/[% asset.author.urlId | html %]" title="Go to [% asset.author.displayName | html %]’s page at typepad.com">[% asset.author.displayName | html %]</a></span>
+                            </p>
+                        </div>
+                        <div class="content yui-u">
+    [%- IF param.full %]
+        [% INCLUDE full %]
+    [%- ELSE %]
+        [% INCLUDE short %]
+    [%- END %]
+                        </div>
+                    </div>
+[%- END %]
+
+                </div>
+            </div>
+        </div>
+    
+        <div id="ft">
+            <div class="container">
+                <p>Powered by <a href="http://www.typepad.com/">TypePad</a></p> 
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
+
+
+[% BLOCK short %]
+[%- IF asset.content.media.size;
+        photo = asset.content.media.0;
+    END; %]
+    [%- IF asset.title && asset.title != asset.content.excerpt %]
+                        <h2><a href="[% asset.permalink %]">[% asset.title %]</a></h2>
+    [%- END %]
+[%- IF asset.content.excerpt %]
+    [%- IF photo %]
+                        <img class="photo-thumb" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-150wi[% ELSE %][% photo.uri | html %][% END %]" />
+    [%- END %]
+                            <p>[% asset.content.excerpt %]</p>
+[%- ELSIF photo; %]
+                            <p><img class="photo-medium" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-350wi[% ELSE %][% photo.uri | html %][% END %]" />
+[%- END %]
+                            <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post">about [% asset.published | html %] ago</a></span>
+[%- END %]
+
+[%- BLOCK full %]
+    [%- IF asset.title %]
+                            <h2><a href="[% asset.permalink %]">[% asset.title %]</a></h2>
+    [%- END %]
+                            [% asset.content %]
+                            <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post">about [% asset.published | html %] ago</a></span>
+[%- END %]
