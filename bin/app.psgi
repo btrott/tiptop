@@ -61,7 +61,7 @@ sub get_notifications {
 my $dashboard = sub {
     my $env = shift;
 
-    my $events = get_notifications( 100 );
+    my $events = get_notifications( 150 );
 
     my @assets;
     my $dur = DateTime::Format::Human::Duration->new;
@@ -70,6 +70,11 @@ my $dashboard = sub {
         next unless is_verb( $event, 'tag:api.typepad.com,2009:NewAsset' );
 
         my $asset = $event->{object};
+
+        # Skip comments.
+        next if is_type( $asset, 'tag:api.typepad.com,2009:Comment' );
+
+        # Skip non-Post assets unless they're in a Motion group.
         next unless
             is_type( $asset, 'tag:api.typepad.com,2009:Post' ) ||
             $asset->{groups} && @{ $asset->{groups} };
@@ -89,10 +94,10 @@ my $dashboard = sub {
 
         push @assets, {
             id          => $asset->{urlId},
+            type        => $type,
             title       => $asset->{title},
             author      => $asset->{author},
             content     => $data,
-            content_full    => $asset->{content},
             permalink   => $link->{href},
             published   => $dur->format_duration_between( $now, $dt ),
         };

@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+use strict;
+
+use FindBin;
+use Path::Class;
+
+my @args = @ARGV;
+unshift @args,
+    '--app', file( $FindBin::Bin, 'app.psgi' ),
+    '--server', 'Standalone::Prefork';
+
+exec 'plackup', @args;
