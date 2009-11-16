@@ -10,9 +10,16 @@ use Plack::App::File;
 use Plack::App::URLMap;
 use Plack::Builder;
 use Template;
+use Template::Provider::Encoding;
+use Template::Stash::ForceUTF8;
 use WWW::TypePad;
 
-my $tt = Template->new( INCLUDE_PATH => 'templates' );
+my $tt = Template->new(
+    LOAD_TEMPLATES  => [
+        Template::Provider::Encoding->new( INCLUDE_PATH => 'templates' )
+    ],
+    STASH           => Template::Stash::ForceUTF8->new,
+);
 my $tp = WWW::TypePad->new;
 
 my $error = sub {
@@ -81,8 +88,11 @@ my $dashboard = sub {
         my $data = Faved::Util->get_content_data( $type, $asset->{content}, $asset->{links} );
 
         push @assets, {
+            id          => $asset->{urlId},
+            title       => $asset->{title},
             author      => $asset->{author},
             content     => $data,
+            content_full    => $asset->{content},
             permalink   => $link->{href},
             published   => $dur->format_duration_between( $now, $dt ),
         };
@@ -93,6 +103,7 @@ my $dashboard = sub {
         {};
     $tt->process( 'assets.tt', { param => $param, assets => \@assets }, \my( $out ) )
         or return $error->( 500, $tt->error );
+    Encode::_utf8_off( $out );
 
     return [
         200,
@@ -108,6 +119,14 @@ builder {
     
     mount '/img' => builder {
         Plack::App::File->new( { root => './img' } );
+    };
+    
+    mount '/js' => builder {
+        Plack::App::File->new( { root => './js' } );
+    };
+    
+    mount '/facebox' => builder {
+        Plack::App::File->new( { root => './facebox' } );
     };
 
     mount '/' => $dashboard;

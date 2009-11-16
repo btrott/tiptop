@@ -1,13 +1,49 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/reset-fonts-grids/reset-fonts-grids.css">
     <link rel="stylesheet" type="text/css" href="/css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="/facebox/facebox.css" />
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="/facebox/facebox.js"></script>
+    <script type="text/javascript">
+    $( document ).ready( function() {
+        var items = $( '.hentry' );
+        var current = 0;
+
+        $( document ).bind( 'keydown', 'j', function( e ) {
+            showItem( current < items.length -1 ? current + 1 : 0 );
+            return false;
+        } );
+        
+        $( document ).bind( 'keydown', 'k', function( e ) {
+            showItem( current == 0 ? items.length -1 : current - 1 );
+            return false;
+        } );
+        
+        $( document ).bind( 'keydown', 'space', function( e ) {
+            $.facebox( {
+                div: '#' + items.get( current ).id + '-full'
+            } );
+            return false;
+        } );
+
+        function showItem( index ) {
+            $( items.get( current ) ).removeClass( 'selected' );
+            current = index;
+
+            var div = $( items.get( current ) );
+            div.addClass( 'selected' );
+
+            var pos = div.offset();
+      	  	window.scrollTo( 0, Math.round( pos.top ) - 20 );
+        }
+        
+        showItem( current );
+    } );
+    </script>    
     <title>Dashboard</title>
-    <meta http-equiv="Content-Language" content="en-us" />
-    <meta http-equiv="imagetoolbar" content="false" />
 </head>
 <body class="home">
     <div id="doc3">
@@ -28,7 +64,7 @@
                 <div class="box">
 [%- FOR asset IN assets %]
     [%- IF param.debug %]<pre>[% USE Dumper; Dumper.dump( asset.content ) %]</pre>[%- END %]
-                    <div class="yui-gf">
+                    <div id="asset-[% asset.id | html %]" class="yui-gf hentry">
                         <div class="details yui-u first">
                             <p class="creator">
                                 <a href="http://profile.typepad.com/[% asset.author.urlId | html %]"><img src="[% asset.author.avatar_uri | html %]" alt="[% asset.author.displayName | html %]" height="50" width="50" /></a><br />
@@ -36,15 +72,18 @@
                             </p>
                         </div>
                         <div class="content yui-u">
-    [%- IF param.full %]
-        [% INCLUDE full %]
-    [%- ELSE %]
-        [% INCLUDE short %]
-    [%- END %]
+    [% INCLUDE short %]
                         </div>
                     </div>
-[%- END %]
 
+                    <div id="asset-[% asset.id | html %]-full" style="display: none">
+    [%- IF asset.title %]
+                        <h2><a href="[% asset.permalink %]">[% asset.title %]</a></h2>
+    [%- END %]
+                        [% asset.content_full %]
+                        <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post">about [% asset.published | html %] ago</a></span>
+                    </div>
+[%- END %]
                 </div>
             </div>
         </div>
@@ -61,27 +100,22 @@
 
 
 [% BLOCK short %]
-[%- IF asset.content.media.size;
-        photo = asset.content.media.0;
-    END; %]
-    [%- IF asset.title && asset.title != asset.content.excerpt %]
-                        <h2><a href="[% asset.permalink %]">[% asset.title %]</a></h2>
+    [%- IF asset.content.media.size;
+            photo = asset.content.media.0;
+        END; %]
+    [% IF asset.title && asset.title != asset.content.excerpt %]
+                        <h2><a class="entry-title" href="[% asset.permalink %]">[% asset.title %]</a></h2>
     [%- END %]
-[%- IF asset.content.excerpt %]
-    [%- IF photo %]
+    [%- IF asset.content.excerpt && asset.content.excerpt.length > 50 %]
+        [%- IF photo %]
                         <img class="photo-thumb" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-150wi[% ELSE %][% photo.uri | html %][% END %]" />
-    [%- END %]
+        [%- END %]
                             <p>[% asset.content.excerpt %]</p>
-[%- ELSIF photo; %]
+    [%- ELSIF photo; %]
                             <p><img class="photo-medium" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-350wi[% ELSE %][% photo.uri | html %][% END %]" />
-[%- END %]
-                            <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post">about [% asset.published | html %] ago</a></span>
-[%- END %]
-
-[%- BLOCK full %]
-    [%- IF asset.title %]
-                            <h2><a href="[% asset.permalink %]">[% asset.title %]</a></h2>
+        [%- IF asset.content.excerpt %]
+                            <p>[% asset.content.excerpt %]</p>
+        [%- END %]
     [%- END %]
-                            [% asset.content %]
                             <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post">about [% asset.published | html %] ago</a></span>
 [%- END %]
