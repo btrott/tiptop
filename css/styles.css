@@ -3,6 +3,9 @@ body { font-family: 'Lucida Grande', 'Lucida Sans Unicode', Arial, Verdana, sans
 a:link, a:visited { color: #287098; text-decoration: none; }
 a:hover, a:active { text-decoration: underline; outline: none; }
 
+.yui-gf div.first { width: 10%; }
+.yui-gf .yui-u { width: 88.2%; }
+
 h1 { font-size: 300%; line-height: 100%; color: #c30; margin-bottom: 50px; font-weight: 300; }
 
 #doc3 { margin: 0; }
