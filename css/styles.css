@@ -18,15 +18,13 @@ h1 { font-size: 300%; line-height: 100%; color: #c30; margin-bottom: 50px; font-
 .navigation a { background: transparent url(/img/button-right.png) no-repeat scroll -9999px 0; display: block; float: left; height: 26px; margin-right: 3px; padding-right: 10px; text-decoration: none; outline: none; }
 .navigation a:hover { color: #416a91; background-position: right -64px; }
 .navigation a:active { color: #fff; background-position: top right; }
-body.home .navigation li.home a,
-body.leaders-today .navigation li.leaders-today a,
-body.leaders-yesterday .navigation li.leaders-yesterday a { color: #fff; background-position: top right; }
+body.dashboard .navigation li.dashboard a,
+body.leaders .navigation li.leaders a { color: #fff; background-position: top right; }
 .navigation a span { background: transparent url(/img/button-left.png) no-repeat -9999px 0; display: block; line-height: 14px; padding: 4px 0 8px 10px; }    
 .navigation a:hover span { background-position: 0 -64px; }
 .navigation a:active span { background-position: 0 0; }
-body.home .navigation li.home a span,
-body.leaders-today .navigation li.leaders-today a span,
-body.leaders-yesterday .navigation li.leaders-yesterday a span { background-position: 0 0; }
+body.dashboard .navigation li.dashboard a span,
+body.leaders .navigation li.leaders a span { background-position: 0 0; }
 
 #bd { margin: 30px 0; }
 .yui-gf { padding: 10px; margin-bottom: 35px; }

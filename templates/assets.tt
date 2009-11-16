@@ -31,8 +31,8 @@
                 $.facebox( {
                     div: '#' + items.get( current ).id + '-full'
                 } );
+                return false;
             }
-            return false;
         } );
 
         function showItem( index ) {
@@ -51,7 +51,7 @@
     </script>    
     <title>Dashboard</title>
 </head>
-<body class="home">
+<body class="[% body_class | html %]">
     <div id="doc3">
     
         <div id="hd">
@@ -63,6 +63,14 @@
                     Dashboard
                 </div>
             </div>
+            <div class="navigation">
+                <div class="container">
+                    <ul>                        
+                        <li class="dashboard"><a href="/"><span>Dashboard</span></a></li>
+                        <li class="leaders"><a href="/most"><span>Leaderboard</span></a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
         
         <div id="bd">
@@ -70,11 +78,19 @@
                 <div class="box">
 [%- FOR asset IN assets %]
     [%- IF param.debug %]<pre>[% USE Dumper; Dumper.dump( asset.content ) %]</pre>[%- END %]
-                    <div id="asset-[% asset.id | html %]" class="yui-gf hentry">
+                    <div id="asset-[% asset.api_id | html %]" class="yui-gf hentry">
                         <div class="details yui-u first">
                             <p class="creator">
-                                <a href="http://profile.typepad.com/[% asset.author.urlId | html %]"><img src="[% asset.author.avatar_uri | html %]" alt="[% asset.author.displayName | html %]" height="50" width="50" /></a><br />
-                                <span class="screenname"><a href="http://profile.typepad.com/[% asset.author.urlId | html %]" title="Go to [% asset.author.displayName | html %]’s page at typepad.com">[% asset.author.displayName | html %]</a></span>
+                                <a href="http://profile.typepad.com/[% asset.author.api_id | html %]"><img src="[% asset.author.avatar_uri | html %]" alt="[% asset.author.display_name | html %]" height="50" width="50" /></a><br />
+                                <span class="screenname"><a href="http://profile.typepad.com/[% asset.author.api_id | html %]" title="Go to [% asset.author.display_name | html %]’s page at typepad.com">[% asset.author.display_name | html %]</a></span>
+    [%- IF asset.favorite_count %]
+                                <p class="favoriters">
+        [%- FOR person IN asset.favorited_by %]
+                                    <a href="http://profile.typepad.com/[% person.api_id | html %]" class="noline" title="[% person.display_name | html %]"><img src="[% person.avatar_uri | html %]" alt="[% person.display_name | html %]" height="24" width="24" onerror="onImgError(this)" /></a>
+        [%- END %]
+                                    <span class="favorite-count">[% asset.favorite_count %]</span>
+                                </p>
+    [%- END %]
                             </p>
                         </div>
                         <div class="content yui-u">
@@ -82,7 +98,7 @@
                         </div>
                     </div>
 
-                    <div id="asset-[% asset.id | html %]-full" style="display: none">
+                    <div id="asset-[% asset.api_id | html %]-full" style="display: none">
     [%- IF asset.title %]
                         <h2><a href="[% asset.permalink %]">[% asset.title %]</a></h2>
     [%- END %]
