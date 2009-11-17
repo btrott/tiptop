@@ -168,20 +168,8 @@ SQL
 };
 
 builder {
-    mount '/css' => builder {
-        Plack::App::File->new( { root => './css' } );
-    };
-    
-    mount '/img' => builder {
-        Plack::App::File->new( { root => './img' } );
-    };
-    
-    mount '/js' => builder {
-        Plack::App::File->new( { root => './js' } );
-    };
-    
-    mount '/facebox' => builder {
-        Plack::App::File->new( { root => './facebox' } );
+    mount '/stat' => builder {
+        Plack::App::File->new( { root => './static' } );
     };
 
     mount '/' => $dashboard;
