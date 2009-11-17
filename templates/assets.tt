@@ -6,9 +6,12 @@
     <link rel="stylesheet" type="text/css" href="/facebox/facebox.css" />
     <script type="text/javascript" src="/js/jquery.min.js"></script>
     <script type="text/javascript" src="/js/jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="/js/jquery.relatize_date.js"></script>
     <script type="text/javascript" src="/facebox/facebox.js"></script>
     <script type="text/javascript">
     $( document ).ready( function() {
+        $( '.relatize' ).relatizeDate()
+        
         var items = $( '.hentry' );
         var current = -1;
 
@@ -104,7 +107,7 @@
     [%- END %]
 
                         [% asset.content.rendered %]
-                        <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post">about [% asset.published | html %] ago</a></span>
+                        <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post"><abbr class="relatize" title="[% asset.published.iso8601 | html %]">[% asset.published.web | html %]</abbr></a></span>
                     </div>
 [%- END %]
                 </div>
@@ -140,5 +143,5 @@
                             <p>[% asset.content.excerpt %]</p>
         [%- END %]
     [%- END %]
-                            <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post">about [% asset.published | html %] ago</a></span>
+                            <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post"><abbr class="relatize" title="[% asset.published.iso8601 | html %]">[% asset.published.web | html %]</abbr></a></span>
 [%- END %]

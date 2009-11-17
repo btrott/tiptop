@@ -2,8 +2,9 @@
 use strict;
 
 use lib '/Users/btrott/Documents/devel/faved-tp';
-use lib '/Users/btrott/Documents/devel/WWW-TypePad/lib';
 
+use DateTime;
+use DateTime::Format::Mail;
 use Faved::Util;
 use JSON;
 use List::Util qw( first );
@@ -36,11 +37,6 @@ my $error = sub {
 sub load_assets_by {
     my( $sql, @bind ) = @_;
 
-    # Used for calculating human-readable date strings in the asset
-    # loop below.
-    my $dt = DateTime::Format::Human::Duration->new;
-    my $now = DateTime->now( time_zone => 'America/Los_Angeles' );
-
     my $sth = $dbh->prepare( <<SQL );
 SELECT a.asset_id,
        a.api_id,
@@ -48,7 +44,7 @@ SELECT a.asset_id,
        a.content,
        a.permalink,
        a.favorite_count,
-       UNIX_TIMESTAMP(CONVERT_TZ(a.created, '+00:00', 'SYSTEM')) AS created,
+       UNIX_TIMESTAMP(CONVERT_TZ(a.created, '+00:00', 'SYSTEM')) AS published,
        a.links_json,
        a.object_type AS type,
        p.api_id AS person_api_id,
@@ -70,9 +66,11 @@ SQL
 
         $row->{favorited_by} = [];
 
-        $row->{published} = $dt->format_duration_between(
-            $now, DateTime->from_epoch( epoch => $row->{created} )
-        );
+        my $dt = DateTime->from_epoch( epoch => $row->{published} );
+        $row->{published} = {
+            iso8601 => $dt->iso8601,
+            web     => DateTime::Format::Mail->format_datetime( $dt ),
+        };
 
         # Calculate an excerpt, extract media, etc, and stuff it all
         # into the "content" key.

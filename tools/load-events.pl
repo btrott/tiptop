@@ -1,7 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
 
-use lib '/Users/btrott/Documents/devel/WWW-TypePad/lib';
 use lib '/Users/btrott/Documents/devel/faved-tp';
 
 use Faved::Util qw( debug );
