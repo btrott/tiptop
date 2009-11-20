@@ -1,14 +1,14 @@
 #!/usr/bin/perl -w
 use strict;
 
-use lib '/Users/btrott/Documents/devel/faved-tp';
+use Find::Lib '../lib';
 
-use Faved::Util qw( debug );
+use Dash::Util qw( debug );
 use List::Util qw( first );
 use WWW::TypePad;
 
 my $tp = WWW::TypePad->new;
-my $dbh = Faved::Util->get_dbh;
+my $dbh = Dash::Util->get_dbh;
 
 my $total;
 my $i = 1;
@@ -121,7 +121,7 @@ SQL
 
     # Convert the API objects into local objects, instantiating a local
     # record if we hadn't seen this asset before.
-    my $asset = Faved::Util->find_or_create_asset_from_api( $event->{object} );
+    my $asset = Dash::Util->find_or_create_asset_from_api( $event->{object} );
 
     # TODO get a real person_id by looking up our user in the API and putting
     # him/her in the DB.
@@ -150,8 +150,8 @@ SQL
     # Convert the API objects into local objects, instantiating a local
     # record if we hadn't seen this user/asset before.
     
-    my $person = Faved::Util->find_or_create_person_from_api( $event->{actor} );
-    my $asset = Faved::Util->find_or_create_asset_from_api( $event->{object} );
+    my $person = Dash::Util->find_or_create_person_from_api( $event->{actor} );
+    my $asset = Dash::Util->find_or_create_asset_from_api( $event->{object} );
 
     $dbh->do( <<SQL, undef, $asset->{asset_id}, $person->{person_id}, $fave_id );
 INSERT INTO favorited_by (asset_id, person_id, api_id) VALUES (?, ?, ?)
