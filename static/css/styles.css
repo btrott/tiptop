@@ -11,19 +11,19 @@ h1 { font-size: 300%; line-height: 100%; color: #c30; margin-bottom: 50px; font-
 #doc3 { margin: 0; }
 .container { margin:auto; text-align:left; width:73.08em; *width:71.32em; min-width: 950px; }
 
-#hd .brand { background: #82a365 url(/stat/img/green.png) repeat-x scroll bottom right; overflow: hidden; padding: 5px 0; text-align: center; }
+#hd .brand { background: #82a365 url(/static/img/green.png) repeat-x scroll bottom right; overflow: hidden; padding: 5px 0; text-align: center; }
 #hd .brand, #hd .brand a { color: #fff; }
 
-.navigation { height: 51px; background: #578ec1 url(/stat/img/blue.png) repeat-x scroll; overflow: hidden; }
+.navigation { height: 51px; background: #578ec1 url(/static/img/blue.png) repeat-x scroll; overflow: hidden; }
 .navigation, .navigation a { color: #fff; }
 .navigation ul { font-size: 1.1em; margin: 0; list-style: none; padding: 15px 0 0; }
 .navigation li { float: left; }
-.navigation a { background: transparent url(/stat/img/button-right.png) no-repeat scroll -9999px 0; display: block; float: left; height: 26px; margin-right: 3px; padding-right: 10px; text-decoration: none; outline: none; }
+.navigation a { background: transparent url(/static/img/button-right.png) no-repeat scroll -9999px 0; display: block; float: left; height: 26px; margin-right: 3px; padding-right: 10px; text-decoration: none; outline: none; }
 .navigation a:hover { color: #416a91; background-position: right -64px; }
 .navigation a:active { color: #fff; background-position: top right; }
 body.dashboard .navigation li.dashboard a,
 body.leaders .navigation li.leaders a { color: #fff; background-position: top right; }
-.navigation a span { background: transparent url(/stat/img/button-left.png) no-repeat -9999px 0; display: block; line-height: 14px; padding: 4px 0 8px 10px; }    
+.navigation a span { background: transparent url(/static/img/button-left.png) no-repeat -9999px 0; display: block; line-height: 14px; padding: 4px 0 8px 10px; }    
 .navigation a:hover span { background-position: 0 -64px; }
 .navigation a:active span { background-position: 0 0; }
 body.dashboard .navigation li.dashboard a span,
