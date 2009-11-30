@@ -2,9 +2,6 @@ package Dash::Util;
 use strict;
 
 use CGI::Deurl::XS ();
-use DateTime;
-use DateTime::Format::Human::Duration;
-use DateTime::Format::ISO8601;
 use DBI;
 use Encode;
 use Exporter::Lite;
