@@ -2,6 +2,7 @@ use inc::Module::Install;
 name 'Dash';
 all_from 'lib/Dash.pm';
 requires 'CGI::Deurl::XS';
+requires 'Config::Tiny';
 requires 'DateTime';
 requires 'DateTime::Format::Mail';
 requires 'DBD::mysql';
