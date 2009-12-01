@@ -2,9 +2,12 @@ package Dash::Util;
 use strict;
 
 use CGI::Deurl::XS ();
+use Config::Tiny;
 use DBI;
 use Encode;
 use Exporter::Lite;
+use File::Basename qw( dirname );
+use Getopt::Long qw( :config pass_through );
 use HTML::Entities ();
 use HTML::Sanitizer;
 use HTML::TokeParser;
@@ -12,13 +15,35 @@ use JSON;
 use List::Util qw( first min reduce );
 
 our @EXPORT_OK = qw( debug );
+our $Config = dirname( __FILE__ ) . "/../../dash.cfg";
+
+GetOptions(
+    'config' => \$Config,
+);
 
 sub debug ($) {
     print STDERR "@_\n";
 }
 
+sub config_file {
+    my $class = shift;
+    return $Config;
+}
+
+sub config {
+    my $class = shift;
+    return our $ConfigObj ||= Config::Tiny->read( $class->config_file );
+}
+
 sub get_dbh {
-    our $DBH ||= DBI->connect( 'dbi:mysql:database=favrd', 'btrott', '', { RaiseError => 1 } );
+    my $class = shift;
+    our $DBH;
+    unless ( defined $DBH ) {
+        my $cfg = $class->config->{database};
+        $DBH = DBI->connect( $cfg->{dsn}, $cfg->{user}, $cfg->{password}, {
+            RaiseError => 1
+        } );
+    }
     return $DBH;
 }
 

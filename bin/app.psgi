@@ -118,7 +118,7 @@ sub process_tt {
         {};
 
     $tt->process( $tmpl, $stash, \my( $out ) )
-        or return error( 500, $tt->error );
+        or return $error->( 500, $tt->error );
     Encode::_utf8_off( $out );
 
     return [

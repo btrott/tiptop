@@ -48,8 +48,6 @@
             var pos = div.offset();
       	  	window.scrollTo( 0, Math.round( pos.top ) - 20 );
         }
-        
-        showItem( current );
     } );
     </script>    
     <title>Dashboard</title>
