@@ -1,5 +1,6 @@
 use inc::Module::Install;
 name 'Dash';
+all_from 'lib/Dash.pm';
 requires 'CGI::Deurl::XS';
 requires 'DateTime';
 requires 'DateTime::Format::Mail';
