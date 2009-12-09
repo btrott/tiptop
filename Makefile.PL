@@ -17,6 +17,7 @@ requires 'Plack';
 requires 'Template';
 requires 'Template::Plugin::DateTime';
 requires 'Template::Provider::Encoding';
+requires 'Try::Tiny';
 requires 'WWW::TypePad';
 build_requires 'Test::More';
 use_test_base;

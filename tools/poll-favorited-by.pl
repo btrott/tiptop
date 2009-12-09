@@ -4,6 +4,7 @@ use strict;
 use Find::Lib '../lib';
 
 use Tiptop::Util qw( debug );
+use Try::Tiny;
 use WWW::TypePad;
 
 my $tp = WWW::TypePad->new;
@@ -13,7 +14,13 @@ my $sth = $dbh->prepare( 'SELECT asset_id, api_id FROM asset' );
 $sth->execute;
 
 while ( my $row = $sth->fetchrow_hashref ) {
-    my $faved = $tp->assets->favorites( $row->{api_id } );
+    my $faved;
+    try {
+        $faved = $tp->assets->favorites( $row->{api_id } );
+    } catch {
+        warn "Error fetching favorites for $row->{api_id}: $_";
+    };
+    next unless $faved;
 
     for my $entry ( @{ $faved->{entries} } ) {
         next unless defined $entry->{urlId};
