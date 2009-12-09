@@ -155,9 +155,10 @@ SQL
 my $dashboard = sub {
     my $env = shift;
 
+    # If we wanted to support a multi-user environment, we'd need a
+    # "WHERE s.person_id = ?" clause.
     my $assets = load_assets_by( <<SQL );
 JOIN stream s ON s.asset_id = a.asset_id
-WHERE s.person_id = 1
 ORDER BY a.created DESC LIMIT 20
 SQL
 

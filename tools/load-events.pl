@@ -9,10 +9,20 @@ use WWW::TypePad;
 
 my $tp = WWW::TypePad->new;
 my $dbh = Dash::Util->get_dbh;
+my $config = Dash::Util->config;
+
+my $user_xid = $config->{user}{xid};
+die "user.xid configuration is required; see README.markdown"
+    unless defined $user_xid;
 
 my $total;
 my $i = 1;
 my $most_recent_event_id;
+
+my $user = $tp->users->get( $user_xid )
+    or die "can't find user $user_xid on TypePad";
+my $me_person = Dash::Util->find_or_create_person_from_api( $user );
+my $me_person_id = $me_person->{person_id};
 
 my( $last_event_id ) = $dbh->selectrow_array( <<SQL );
 SELECT api_id FROM last_event_id
@@ -21,7 +31,7 @@ SQL
 EVENTS: {
     do {
         my $res = $tp->users->notifications(
-            '6p00d83455876069e2',
+            $user_xid,
             { 'start-index' => $i }
         );
         $total ||= $res->{totalResults};
@@ -123,9 +133,7 @@ SQL
     # record if we hadn't seen this asset before.
     my $asset = Dash::Util->find_or_create_asset_from_api( $event->{object} );
 
-    # TODO get a real person_id by looking up our user in the API and putting
-    # him/her in the DB.
-    $dbh->do( <<SQL, undef, 1, $asset->{asset_id} );
+    $dbh->do( <<SQL, undef, $me_person_id, $asset->{asset_id} );
 INSERT INTO stream (person_id, asset_id) VALUES (?, ?)
 SQL
     
