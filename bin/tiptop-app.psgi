@@ -3,7 +3,7 @@ use strict;
 
 use Find::Lib '../lib';
 
-use Dash::Util;
+use Tiptop::Util;
 use DateTime;
 use DateTime::Format::Mail;
 use JSON;
@@ -36,7 +36,7 @@ my $error = sub {
 sub load_assets_by {
     my( $sql, @bind ) = @_;
 
-    my $dbh = Dash::Util->get_dbh;
+    my $dbh = Tiptop::Util->get_dbh;
     my $sth = $dbh->prepare( <<SQL );
 SELECT a.asset_id,
        a.api_id,
@@ -74,7 +74,7 @@ SQL
 
         # Calculate an excerpt, extract media, etc, and stuff it all
         # into the "content" key.
-        $row->{content} = Dash::Util->get_content_data(
+        $row->{content} = Tiptop::Util->get_content_data(
             $row->{type},
             $row->{content},
             decode_json( $row->{links_json} ),

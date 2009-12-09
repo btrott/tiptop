@@ -1,4 +1,4 @@
-package Dash::Util;
+package Tiptop::Util;
 use strict;
 
 use CGI::Deurl::XS ();
@@ -15,7 +15,7 @@ use JSON;
 use List::Util qw( first min reduce );
 
 our @EXPORT_OK = qw( debug );
-our $Config = dirname( __FILE__ ) . "/../../dash.cfg";
+our $Config = dirname( __FILE__ ) . "/../../tiptop.cfg";
 
 GetOptions(
     'config' => \$Config,

@@ -6,6 +6,6 @@ use Path::Class;
 
 my @args = @ARGV;
 unshift @args,
-    '--app', file( $FindBin::Bin, 'app.psgi' );
+    '--app', file( $FindBin::Bin, 'tiptop-app.psgi' );
 
 exec 'plackup', @args;

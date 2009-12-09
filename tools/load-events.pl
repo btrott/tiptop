@@ -3,13 +3,13 @@ use strict;
 
 use Find::Lib '../lib';
 
-use Dash::Util qw( debug );
+use Tiptop::Util qw( debug );
 use List::Util qw( first );
 use WWW::TypePad;
 
 my $tp = WWW::TypePad->new;
-my $dbh = Dash::Util->get_dbh;
-my $config = Dash::Util->config;
+my $dbh = Tiptop::Util->get_dbh;
+my $config = Tiptop::Util->config;
 
 my $user_xid = $config->{user}{xid};
 die "user.xid configuration is required; see README.markdown"
@@ -21,7 +21,7 @@ my $most_recent_event_id;
 
 my $user = $tp->users->get( $user_xid )
     or die "can't find user $user_xid on TypePad";
-my $me_person = Dash::Util->find_or_create_person_from_api( $user );
+my $me_person = Tiptop::Util->find_or_create_person_from_api( $user );
 my $me_person_id = $me_person->{person_id};
 
 my( $last_event_id ) = $dbh->selectrow_array( <<SQL );
@@ -131,7 +131,7 @@ SQL
 
     # Convert the API objects into local objects, instantiating a local
     # record if we hadn't seen this asset before.
-    my $asset = Dash::Util->find_or_create_asset_from_api( $event->{object} );
+    my $asset = Tiptop::Util->find_or_create_asset_from_api( $event->{object} );
 
     $dbh->do( <<SQL, undef, $me_person_id, $asset->{asset_id} );
 INSERT INTO stream (person_id, asset_id) VALUES (?, ?)
@@ -158,8 +158,8 @@ SQL
     # Convert the API objects into local objects, instantiating a local
     # record if we hadn't seen this user/asset before.
     
-    my $person = Dash::Util->find_or_create_person_from_api( $event->{actor} );
-    my $asset = Dash::Util->find_or_create_asset_from_api( $event->{object} );
+    my $person = Tiptop::Util->find_or_create_person_from_api( $event->{actor} );
+    my $asset = Tiptop::Util->find_or_create_asset_from_api( $event->{object} );
 
     $dbh->do( <<SQL, undef, $asset->{asset_id}, $person->{person_id}, $fave_id );
 INSERT INTO favorited_by (asset_id, person_id, api_id) VALUES (?, ?, ?)

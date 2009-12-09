@@ -1,6 +1,6 @@
 use inc::Module::Install;
-name 'Dash';
-all_from 'lib/Dash.pm';
+name 'Tiptop';
+all_from 'lib/Tiptop.pm';
 requires 'CGI::Deurl::XS';
 requires 'Config::Tiny';
 requires 'DateTime';
