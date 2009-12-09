@@ -19,8 +19,12 @@ Installing Tiptop
 
 Tiptop itself is pure Perl, but it has a number of dependencies beyond core
 Perl. You can guarantee that those dependencies are installed by running the
-`Makefile.PL`. Tiptop also requires a MySQL database to store post & user
-content locally.
+`Makefile.PL`, which will complain for all dependencies that aren't installed.
+
+Tiptop also requires a MySQL database to store post & user content locally.
+The schema for that database is in `tiptop.sql`:
+
+    mysql -u username tiptop < tiptop.sql
 
 
 Configuring Tiptop
