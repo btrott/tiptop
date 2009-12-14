@@ -111,11 +111,10 @@ SQL
 }
 
 sub process_tt {
-    my( $env, $tmpl, $stash ) = @_;
+    my( $env, $stash ) = @_;
 
-    $stash->{param} ||= $env->{QUERY_STRING} ?
-        CGI::Deurl::XS::parse_query_string( $env->{QUERY_STRING} ) :
-        {};
+    my $tmpl = $stash->{param}{format} && $stash->{param}{format} eq 'partial' ?
+        'assets_list.tt' : 'assets.tt';
 
     $tt->process( $tmpl, $stash, \my( $out ) )
         or return $error->( 500, $tt->error );
@@ -131,6 +130,11 @@ sub process_tt {
 my $leaders = sub {
     my $env = shift;
 
+    my $param = $env->{QUERY_STRING} ?
+        CGI::Deurl::XS::parse_query_string( $env->{QUERY_STRING} ) :
+        {};
+    my $offset = $param->{offset} || 0;
+
     # The client can ask for a specific day's worth of favorites by
     # specifying the /YYYY-MM-DD in the path; we default to the current day.
     my $start;
@@ -143,28 +147,37 @@ my $leaders = sub {
     my $end = $start->clone->add( days => 1 );
 
     my $assets = load_assets_by( <<SQL, $start->ymd, $end->ymd );
-WHERE a.favorite_count > 0 AND a.created BETWEEN ? AND ? ORDER BY a.favorite_count DESC LIMIT 20
+WHERE a.favorite_count > 0 AND a.created BETWEEN ? AND ? ORDER BY a.favorite_count DESC LIMIT 20 OFFSET $offset
 SQL
 
-    return process_tt( $env, 'assets.tt', {
+    return process_tt( $env, {
+        uri         => $env->{REQUEST_URI},
         assets      => $assets,
         body_class  => 'leaders',
+        param       => $param,
     } );
 };
 
 my $dashboard = sub {
     my $env = shift;
 
+    my $param = $env->{QUERY_STRING} ?
+        CGI::Deurl::XS::parse_query_string( $env->{QUERY_STRING} ) :
+        {};
+    my $offset = $param->{offset} || 0;
+
     # If we wanted to support a multi-user environment, we'd need a
     # "WHERE s.person_id = ?" clause.
     my $assets = load_assets_by( <<SQL );
 JOIN stream s ON s.asset_id = a.asset_id
-ORDER BY a.created DESC LIMIT 20
+ORDER BY a.created DESC LIMIT 20 OFFSET $offset
 SQL
 
-    return process_tt( $env, 'assets.tt', {
+    return process_tt( $env, {
+        uri         => $env->{REQUEST_URI},
         assets      => $assets,
         body_class  => 'dashboard',
+        param       => $param,
     } );
 };
 

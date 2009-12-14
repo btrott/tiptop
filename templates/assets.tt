@@ -10,8 +10,10 @@
     <script type="text/javascript" src="/static/facebox/facebox.js"></script>
     <script type="text/javascript">
     $( document ).ready( function() {
-        $( '.relatize' ).relatizeDate()
-        
+        var currentOffset = 0;
+
+        $( '.relatize' ).relatizeDate();
+
         var items = $( '.hentry' );
         var current = -1;
 
@@ -36,6 +38,14 @@
                 } );
                 return false;
             }
+        } );
+        
+        $( '#more-button' ).bind( 'click', function( e ) {
+            e.preventDefault();
+            currentOffset += 20;
+            $.get( '[% uri %]', { offset: currentOffset, format: 'partial' }, function( data ) {
+                $( '#assets-container' ).append( data );
+            } );
         } );
 
         function showItem( index ) {
@@ -77,37 +87,13 @@
         <div id="bd">
             <div class="container">
                 <div class="box">
-[%- FOR asset IN assets %]
-    [%- IF param.debug %]<pre>[% USE Dumper; Dumper.dump( asset.content ) %]</pre>[%- END %]
-                    <div id="asset-[% asset.api_id | html %]" class="yui-gf hentry">
-                        <div class="details yui-u first">
-                            <p class="creator">
-                                <a href="http://profile.typepad.com/[% asset.author.api_id | html %]"><img src="[% asset.author.avatar_uri | html %]" alt="[% asset.author.display_name | html %]" height="50" width="50" /></a><br />
-                                <span class="screenname"><a href="http://profile.typepad.com/[% asset.author.api_id | html %]" title="Go to [% asset.author.display_name | html %]’s page at typepad.com">[% asset.author.display_name | html %]</a></span>
-    [%- IF asset.favorite_count %]
-                                <p class="favoriters">
-        [%- FOR person IN asset.favorited_by %]
-                                    <a href="http://profile.typepad.com/[% person.api_id | html %]" class="noline" title="[% person.display_name | html %]"><img src="[% person.avatar_uri | html %]" alt="[% person.display_name | html %]" height="24" width="24" onerror="onImgError(this)" /></a>
-        [%- END %]
-                                    <span class="favorite-count">[% asset.favorite_count %]</span>
-                                </p>
-    [%- END %]
-                            </p>
-                        </div>
-                        <div class="content yui-u">
-    [% INCLUDE short %]
-                        </div>
+                    <div id="assets-container">
+[% INCLUDE assets_list.tt %]
                     </div>
 
-                    <div id="asset-[% asset.api_id | html %]-full" style="display: none">
-    [%- IF asset.title %]
-                        <h2><a href="[% asset.permalink %]">[% asset.title %]</a></h2>
-    [%- END %]
-
-                        [% asset.content.rendered %]
-                        <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post"><abbr class="relatize" title="[% asset.published.iso8601 | html %]">[% asset.published.web | html %]</abbr></a></span>
+                    <div id="pagination">
+                        <a href="#" id="more-button">more</a>
                     </div>
-[%- END %]
                 </div>
             </div>
         </div>
@@ -121,25 +107,3 @@
     </div>
 </body>
 </html>
-
-
-[% BLOCK short %]
-    [%- IF asset.content.media.size;
-            photo = asset.content.media.0;
-        END; %]
-    [% IF asset.title && asset.title != asset.content.excerpt %]
-                        <h2><a class="entry-title" href="[% asset.permalink %]">[% asset.title %]</a></h2>
-    [%- END %]
-    [%- IF asset.content.excerpt && asset.content.excerpt.length > 50 %]
-        [%- IF photo %]
-                        <img class="photo-thumb" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-150wi[% ELSE %][% photo.uri | html %][% END %]" />
-        [%- END %]
-                            <p>[% asset.content.excerpt %]</p>
-    [%- ELSIF photo; %]
-                            <p><img class="photo-medium" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-350wi[% ELSE %][% photo.uri | html %][% END %]" />
-        [%- IF asset.content.excerpt %]
-                            <p>[% asset.content.excerpt %]</p>
-        [%- END %]
-    [%- END %]
-                            <span class="meta"><a href="[% asset.permalink | html %]" title="View individual post"><abbr class="relatize" title="[% asset.published.iso8601 | html %]">[% asset.published.web | html %]</abbr></a></span>
-[%- END %]
