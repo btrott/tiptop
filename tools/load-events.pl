@@ -117,6 +117,7 @@ sub is_type {
 
 sub process_asset {
     my( $event ) = @_;
+    return unless $event->{object};
 
     my $api_id = $event->{object}{urlId};
     my $row = $dbh->selectrow_arrayref( <<SQL, undef, $api_id );
@@ -142,6 +143,7 @@ SQL
 
 sub process_favorite {
     my( $event ) = @_;
+    return unless $event->{object} && $event->{actor};
 
     my $fave_id = join ':', $event->{object}{urlId}, $event->{actor}{urlId};
 
