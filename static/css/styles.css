@@ -13,6 +13,7 @@ h1 { font-size: 300%; line-height: 100%; color: #c30; margin-bottom: 50px; font-
 
 #hd .brand { background: #82a365 url(/static/img/green.png) repeat-x scroll bottom right; overflow: hidden; padding: 5px 0; text-align: center; }
 #hd .brand, #hd .brand a { color: #fff; }
+#hd .login { float: right; }
 
 .navigation { height: 51px; background: #578ec1 url(/static/img/blue.png) repeat-x scroll; overflow: hidden; }
 .navigation, .navigation a { color: #fff; }

@@ -72,6 +72,13 @@
                 <div class="container">
                     <strong><a href="http://www.typepad.com/">TypePad</a></strong> /
                     Dashboard
+                    <div class="login">
+[%- IF remote_user %]
+                        Hi, <a href="http://profile.typepad.com/[% remote_user.api_id | html %]">[% remote_user.display_name | html %]</a>!
+[%- ELSE %]
+                        <a href="/login">Login</a>
+[%- END %]
+                    </div>
                 </div>
             </div>
             <div class="navigation">

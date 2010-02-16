@@ -10,7 +10,7 @@ use WWW::TypePad;
 my $tp = WWW::TypePad->new;
 my $dbh = Tiptop::Util->get_dbh;
 
-my $sth = $dbh->prepare( 'SELECT asset_id, api_id FROM asset' );
+my $sth = $dbh->prepare( 'SELECT asset_id, api_id FROM asset ORDER BY asset_id DESC' );
 $sth->execute;
 
 while ( my $row = $sth->fetchrow_hashref ) {

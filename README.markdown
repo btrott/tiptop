@@ -31,9 +31,9 @@ Configuring Tiptop
 ------------------
 
 Tiptop's configuration is stored in the `tiptop.cfg` file. At a minimum,
-the database and user configuration (information about the user whose
-followers you'd like to track, which is probably you) is required. Here's
-a sample configuration file, which should live in `tiptop.cfg` in your
+the database, application, and user configuration (information about the
+user whose followers you'd like to track, which is probably you) is required.
+Here's a sample configuration file, which should live in `tiptop.cfg` in your
 application root:
 
     [database]
@@ -43,6 +43,13 @@ application root:
     
     [user]
     xid=6p00d83455876069e2
+
+    [app]
+    consumer_key=...
+    consumer_secret=...
+
+Your consumer key and consumer secret can be obtained from
+[your TypePad account](http://www.typepad.com/account/access/api_key).
 
 
 Running Tiptop

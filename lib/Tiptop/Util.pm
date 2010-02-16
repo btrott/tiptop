@@ -74,6 +74,18 @@ SQL
     return $row;
 }
 
+sub save_oauth_tokens {
+    my $class = shift;
+    my( $person_id, $token, $token_secret ) = @_;
+
+    my $dbh = $class->get_dbh;
+    my $rv = $dbh->do( <<SQL, undef, $person_id, $token, $token_secret );
+REPLACE INTO oauth_tokens (person_id, access_token, access_token_secret)
+VALUES (?, ?, ?)
+SQL
+    return $rv;
+}
+
 sub get_best_avatar_uri {
     my $class = shift;
     my( $links ) = @_;

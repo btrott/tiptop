@@ -47,3 +47,11 @@ CREATE TABLE stream (
     asset_id INTEGER UNSIGNED NOT NULL,
     PRIMARY KEY (person_id, asset_id)
 );
+
+DROP TABLE IF EXISTS oauth_tokens;
+CREATE TABLE oauth_tokens (
+    person_id INTEGER UNSIGNED NOT NULL,
+    access_token VARCHAR(255) NOT NULL,
+    access_token_secret VARCHAR(255) NOT NULL,
+    PRIMARY KEY (person_id)
+);
