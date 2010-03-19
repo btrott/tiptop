@@ -58,7 +58,7 @@ sub find_or_create_person_from_api {
 SELECT person_id, api_id, display_name, avatar_uri FROM person WHERE api_id = ?
 SQL
     unless ( defined $row ) {
-        my $avatar_uri = $class->get_best_avatar_uri( $obj->{links} );
+        my $avatar_uri = $class->get_best_avatar_uri( $obj->{avatarLink} );
         my $display_name = $obj->{displayName};
 
         $dbh->do( <<SQL, undef, $api_id, $display_name, $avatar_uri );
@@ -88,20 +88,18 @@ SQL
 
 sub get_best_avatar_uri {
     my $class = shift;
-    my( $links ) = @_;
-    return unless $links && @$links;
-    
-    # Look first for a 50px width avatar...
-    my $link = first { $_->{rel} eq 'avatar' && $_->{width} == 50 } @$links;
+    my( $link ) = @_;
+    return unless $link;
 
-    # ... and if we can't find one, grab the largest available avatar,
-    # which will by definition be less than 50px width, I think?
-    unless ( $link ) {
-        $link = reduce { $a->{width} > $b->{width} ? $a : $b }
-                grep { $_->{rel} eq 'avatar' } @$links;
+    # If the image is hosted on typepad.com (has a urlTemplate), grab the
+    # 50si square version, and otherwise just return whatever url we were
+    # given.
+    if ( my $uri = $link->{urlTemplate} ) {
+        $uri =~ s/\{spec\}/50si/;
+        return $uri;
+    } else {
+        return $link->{url};
     }
-
-    return $link ? $link->{href} : undef;
 }
 
 sub find_or_create_asset_from_api {
@@ -112,29 +110,29 @@ sub find_or_create_asset_from_api {
 
     my $dbh = $class->get_dbh;
     my $row = $dbh->selectrow_hashref( <<SQL, undef, $api_id );
-SELECT asset_id, api_id, person_id, title, content, permalink, created, favorite_count, links_json, object_type FROM asset WHERE api_id = ?
+SELECT asset_id, api_id, person_id, title, content, permalink, created, favorite_count, image_link, object_type FROM asset WHERE api_id = ?
 SQL
 
     unless ( defined $row ) {
         my $person = $class->find_or_create_person_from_api( $obj->{author} );
 
-        my $link = first { $_->{rel} eq 'alternate' } @{ $obj->{links} };
         my( $type ) = $obj->{objectTypes}[0] =~ /(\w+)$/;
+        my $image_link = $class->extract_image_link( $obj );
         
         $row = {
             api_id          => $api_id,
             person_id       => $person->{person_id},
             title           => $obj->{title},
             content         => $obj->{content},
-            permalink       => $link->{href},
+            permalink       => $obj->{permalinkUrl},
             created         => $obj->{published},
             favorite_count  => 0,
-            links_json      => encode_json( $obj->{links} ),
+            image_link      => $image_link,
             object_type     => $type,
         };
 
-        $dbh->do( <<SQL, undef, $row->{api_id}, $row->{person_id}, $row->{title}, $row->{content}, $row->{permalink}, $row->{created}, $row->{favorite_count}, $row->{links_json}, $row->{object_type} );
-INSERT INTO asset (api_id, person_id, title, content, permalink, created, favorite_count, links_json, object_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        $dbh->do( <<SQL, undef, $row->{api_id}, $row->{person_id}, $row->{title}, $row->{content}, $row->{permalink}, $row->{created}, $row->{favorite_count}, $row->{image_link} ? encode_json( $row->{image_link} ) : undef, $row->{object_type} );
+INSERT INTO asset (api_id, person_id, title, content, permalink, created, favorite_count, image_link, object_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 SQL
         $row->{asset_id} = $dbh->{mysql_insertid};
     }
@@ -192,58 +190,58 @@ sub generate_excerpt {
     return $text;
 }
 
-sub explode_asset_uri {
-    my( $uri ) = @_;
-    my( $server, $xid ) = $uri =~ /
-        http:\/\/(.*?)\/(6a[0-9a-f]{32})
-    /x or return;
-    return( $server, $xid );
+sub extract_image_link {
+    my $class = shift;
+    my( $obj ) = @_;
+
+    my $link;
+    if ( exists $obj->{imageLink} ) {
+        $link = $obj->{imageLink};
+    } elsif ( exists $obj->{previewImageLink} ) {
+        $link = $obj->{previewImageLink};
+    } elsif ( exists $obj->{embeddedImageLinks} ) {
+        $link = $obj->{embeddedImageLinks}[0];
+    }
+
+    return $link if $link;
+
+    if ( my $content = $obj->{content} ) {
+        my $parser = HTML::TokeParser->new( \$content );
+        while ( my $t = $parser->get_token ) {
+            if ( $t->[0] eq 'S' && $t->[1] eq 'img' ) {
+                return {
+                    url     => $t->[2]{src},
+                    width   => $t->[2]{width},
+                    height  => $t->[2]{height},
+                };
+            } elsif ( $t->[0] eq 'S' && $t->[1] eq 'embed' ) {
+                my $src = $t->[2]{src};
+                if ( $src =~ m!^http://(?:www\.)?youtube\.com/(?:.*?\?v=|v\/)([\w\-]+)! ) {
+                    return {
+                        url => 'http://img.youtube.com/vi/' . $1 . '/1.jpg',
+                    };
+                }
+            }
+        }
+    }
 }
 
 sub get_content_data {
     my $class = shift;
-    my( $type, $content, $links ) = @_;
+    my( $type, $content, $image_link ) = @_;
 
     my %data = (
         excerpt     => generate_excerpt( $content, 50 ),
-        media       => [],
+        image_link  => $image_link,
         rendered    => $content,
     );
 
-    if ( $type eq 'Photo' ) {
-        my $link = reduce { $a->{width} > $b->{width} ? $a : $b }
-                   grep { $_->{rel} eq 'enclosure' } @$links;
-        if ( $link ) {
-            $data{rendered} = <<HTML;
-<p><img src="$link->{href}" width="$link->{width}" height="$link->{height}" /></p>
+    if ( $type eq 'Photo' && $image_link && !$data{rendered} ) {
+        $data{rendered} = <<HTML;
+<p><img src="$image_link->{href}" width="$image_link->{width}" height="$image_link->{height}" /></p>
 
 <p>$content</p>
 HTML
-            my( $server, $xid ) = explode_asset_uri( $link->{href} );
-            $data{media} = [ {
-                type        => 'photo',
-                uri         => $link->{href},
-                server      => $server,
-                id          => $xid,
-                width       => $link->{width},
-                height      => $link->{height},
-            } ];
-        }
-    } elsif ( $type eq 'Post' ) {
-        my $parser = HTML::TokeParser->new( \$content );
-        while ( my $t = $parser->get_token ) {
-            if ( $t->[0] eq 'S' && $t->[1] eq 'img' ) {
-                my( $server, $xid ) = explode_asset_uri( $t->[2]{src} );
-                push @{ $data{media} }, {
-                    type    => 'photo',
-                    uri     => $t->[2]{src},
-                    server  => $server,
-                    id      => $xid,
-                    width   => $t->[2]{width},
-                    height  => $t->[2]{height},
-                };
-            }
-        }
     }
 
     return \%data;

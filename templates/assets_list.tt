@@ -16,21 +16,16 @@
                             </p>
                         </div>
                         <div class="content yui-u">
-    [%- IF asset.content.media.size;
-            photo = asset.content.media.0;
-        ELSE;
-            photo = '';
-        END; %]
     [% IF asset.title && asset.title != asset.content.excerpt %]
                             <h2><a class="entry-title" href="[% asset.permalink %]">[% asset.title %]</a></h2>
     [%- END %]
     [%- IF asset.content.excerpt && asset.content.excerpt.length > 50 %]
-        [%- IF photo %]
-                            <img class="photo-thumb" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-150wi[% ELSE %][% photo.uri | html %][% END %]" />
+        [%- IF asset.content.image_link %]
+                            <img class="photo-thumb" src="[% IF asset.content.image_link.urlTemplate %][% asset.content.image_link.urlTemplate.replace( '{spec}', '150wi' ) | html %][% ELSE %][% asset.content.image_link.url | html %][% END %]" />
         [%- END %]
                             <p>[% asset.content.excerpt %]</p>
-    [%- ELSIF photo; %]
-                            <p><img class="photo-medium" src="[% IF photo.server && photo.id %]http://[% photo.server | html %]/[% photo.id | html %]-350wi[% ELSE %][% photo.uri | html %][% END %]" />
+    [%- ELSIF asset.content.image_link %]
+                            <p><img class="photo-medium" src="[% IF asset.content.image_link.urlTemplate %][% asset.content.image_link.urlTemplate.replace( '{spec}', '350wi' ) | html %][% ELSE %][% asset.content.image_link.url | html %][% END %]" />
         [%- IF asset.content.excerpt %]
                             <p>[% asset.content.excerpt %]</p>
         [%- END %]

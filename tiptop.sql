@@ -8,7 +8,7 @@ CREATE TABLE asset (
     permalink VARCHAR(255),
     created DATETIME,
     favorite_count INTEGER UNSIGNED,
-    links_json MEDIUMBLOB,
+    image_link MEDIUMBLOB,
     object_type VARCHAR(15),
     PRIMARY KEY (asset_id),
     INDEX (api_id),

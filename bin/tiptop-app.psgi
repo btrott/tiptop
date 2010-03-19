@@ -47,7 +47,7 @@ SELECT a.asset_id,
        a.permalink,
        a.favorite_count,
        UNIX_TIMESTAMP(CONVERT_TZ(a.created, '+00:00', 'SYSTEM')) AS published,
-       a.links_json,
+       a.image_link,
        a.object_type AS type,
        p.api_id AS person_api_id,
        p.display_name,
@@ -79,7 +79,7 @@ SQL
         $row->{content} = Tiptop::Util->get_content_data(
             $row->{type},
             $row->{content},
-            decode_json( $row->{links_json} ),
+            $row->{image_link} ? decode_json( $row->{image_link} ) : undef,
         );
 
         push @assets, $row;
