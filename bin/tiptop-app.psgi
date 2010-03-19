@@ -3,19 +3,16 @@ use strict;
 
 use Find::Lib '../lib';
 
-use Tiptop::Util;
-use CGI::Cookie ();
 use DateTime;
 use DateTime::Format::Mail;
-use Digest::HMAC_SHA1 ();
 use JSON;
-use List::Util qw( first );
 use Plack::App::File;
-use Plack::App::URLMap;
 use Plack::Builder;
+use Plack::Request;
 use Template;
 use Template::Provider::Encoding;
 use Template::Stash::ForceUTF8;
+use Tiptop::Util;
 use WWW::TypePad;
 
 my $tt = Template->new(
@@ -113,75 +110,50 @@ SQL
 }
 
 sub process_tt {
-    my( $env, $stash ) = @_;
-    
-    my %cookies = CGI::Cookie->parse( $env->{HTTP_COOKIE} );
-    if ( my $cookie = $cookies{session_person_id} ) {
-        my $person_id = session_cookie_to_person( $cookie->value );
-        if ( $person_id ) {
-            my $dbh = Tiptop::Util->get_dbh;
-            $stash->{remote_user} = $dbh->selectrow_hashref( <<SQL, undef, $person_id );
+    my( $req, $stash ) = @_;
+
+    if ( my $person_id = $req->session->{person_id} ) {
+        my $dbh = Tiptop::Util->get_dbh;
+        $stash->{remote_user} = $dbh->selectrow_hashref( <<SQL, undef, $person_id );
 SELECT api_id, display_name, avatar_uri
 FROM person
 WHERE person_id = ?
 SQL
-        }
     }
 
-    my $tmpl = $stash->{param}{format} && $stash->{param}{format} eq 'partial' ?
-        'assets_list.tt' : 'assets.tt';
+    my $tmpl = $req->query_parameters->{format} &&
+               $req->query_parameters->{format} eq 'partial' ?
+               'assets_list.tt' : 'assets.tt';
+
+    $stash->{request} = $req;
 
     $tt->process( $tmpl, $stash, \my( $out ) )
         or return $error->( 500, $tt->error );
     Encode::_utf8_off( $out );
 
-    return [
-        200,
-        [ 'Content-Type', 'text/html' ],
-        [ $out ],
-    ];
+    my $res = Plack::Response->new( 200 );
+    $res->content_type( 'text/html' );
+    $res->body( $out );
+    return $res->finalize;
 }
 
-# Kind of lame. Should probably use Plack::Middleware::Session once the
-# pure-cookie implementation is in a non-developer release.
-sub person_to_session_cookie {
-    my( $person_id ) = @_;
-    my $secret = Tiptop::Util->config->{app}{session_secret};
-    return join ':',
-        $person_id,
-        $secret ? Digest::HMAC_SHA1::hmac_sha1_hex( $person_id, $secret ) : '';
-}
-
-sub session_cookie_to_person {
-    my( $value ) = @_;
-    my( $person_id, $sig ) = split /:/, $value, 2;
-    if ( my $secret = Tiptop::Util->config->{app}{session_secret} ) {
-        return unless $sig eq Digest::HMAC_SHA1::hmac_sha1_hex(
-            $person_id, $secret
-        );
-    }
-    return $person_id;
-}
-
-sub uri_for {
-    my( $env, $path ) = @_;
+sub Plack::Request::uri_for {
+    my $req = shift;
+    my( $path ) = @_;
     $path = '/' . $path unless $path =~ m{^/};
-    return 'http://' . $env->{HTTP_HOST} . $path;
+    return 'http://' . $req->env->{HTTP_HOST} . $path;
 }
 
 my $leaders = sub {
-    my $env = shift;
+    my $req = Plack::Request->new( shift );
 
-    my $param = $env->{QUERY_STRING} ?
-        CGI::Deurl::XS::parse_query_string( $env->{QUERY_STRING} ) :
-        {};
-    my $offset = $param->{offset} || 0;
+    my $offset = $req->query_parameters->{offset} || 0;
 
     # The client can ask for a specific day's worth of favorites by
     # specifying the /YYYY-MM-DD in the path; we default to the current day.
     my $start;
-    if ( $env->{PATH_INFO} &&
-         $env->{PATH_INFO} =~ /^\/(\d{4})\-(\d{2})\-(\d{2})$/ ) {
+    if ( $req->path_info &&
+         $req->path_info =~ /^\/(\d{4})\-(\d{2})\-(\d{2})$/ ) {
         $start = DateTime->new( year => $1, month => $2, day => $3 );
     } else {
         $start = DateTime->now->truncate( to => 'day' );
@@ -192,21 +164,16 @@ my $leaders = sub {
 WHERE a.favorite_count > 0 AND a.created BETWEEN ? AND ? ORDER BY a.favorite_count DESC LIMIT 20 OFFSET $offset
 SQL
 
-    return process_tt( $env, {
-        uri         => $env->{REQUEST_URI},
+    return process_tt( $req, {
         assets      => $assets,
         body_class  => 'leaders',
-        param       => $param,
     } );
 };
 
 my $dashboard = sub {
-    my $env = shift;
+    my $req = Plack::Request->new( shift );
 
-    my $param = $env->{QUERY_STRING} ?
-        CGI::Deurl::XS::parse_query_string( $env->{QUERY_STRING} ) :
-        {};
-    my $offset = $param->{offset} || 0;
+    my $offset = $req->query_parameters->{offset} || 0;
 
     # If we wanted to support a multi-user environment, we'd need a
     # "WHERE s.person_id = ?" clause.
@@ -215,16 +182,14 @@ JOIN stream s ON s.asset_id = a.asset_id
 ORDER BY a.created DESC LIMIT 20 OFFSET $offset
 SQL
 
-    return process_tt( $env, {
-        uri         => $env->{REQUEST_URI},
+    return process_tt( $req, {
         assets      => $assets,
         body_class  => 'dashboard',
-        param       => $param,
     } );
 };
 
 my $login = sub {
-    my $env = shift;
+    my $req = Plack::Request->new( shift );
 
     my $config = Tiptop::Util->config;
     my $tp = WWW::TypePad->new(
@@ -232,30 +197,28 @@ my $login = sub {
         consumer_secret     => $config->{app}{consumer_secret},
     );
     
-    my $cb_uri = uri_for( $env, '/login-callback' );
+    # After the user authorizes our application, he/she will be sent back
+    # to the callback URI ($login_cb below).
+    my $cb_uri = $req->uri_for( '/login-callback' );
+    
+    # Under the hood, get_authorization_url will request a request token,
+    # then construct a URI to send the user to to authorize our app.
     my $uri = $tp->oauth->get_authorization_url(
         callback => $cb_uri,
     );
-    my $token_secret = $tp->oauth->request_token_secret;
+    
+    my $res = Plack::Response->new;
+    $res->redirect( $uri );
 
     # Store the token secret in the browser cookies for when this user
     # returns from TypePad.
-    my $cookie = CGI::Cookie->new(
-        -name   => 'oauth_token_secret',
-        -value  => $token_secret,
-    );
-    
-    return [
-        302,
-        [
-            Location        => $uri,
-            'Set-Cookie'    => "$cookie",
-        ],
-    ];
+    $res->cookies->{oauth_token_secret} = $tp->oauth->request_token_secret;
+
+    return $res->finalize;
 };
 
 my $login_cb = sub {
-    my $env = shift;
+    my $req = Plack::Request->new( shift );
 
     my $config = Tiptop::Util->config;
     my $tp = WWW::TypePad->new(
@@ -265,25 +228,22 @@ my $login_cb = sub {
 
     # request_token is passed back to us via the query string
     # as "oauth_token"...
-    my $param = $env->{QUERY_STRING} ?
-        CGI::Deurl::XS::parse_query_string( $env->{QUERY_STRING} ) :
-        {};
-    my $token = $param->{oauth_token}
-        or return $error->( 400, 'No oauth_token' );
+    my $token = $req->query_parameters->{oauth_token}
+        or return error( 400, 'No oauth_token' );
 
     # ... and the request_token_secret is stored in the browser cookie.
-    my %cookies = CGI::Cookie->parse( $env->{HTTP_COOKIE} );
-    my $token_secret = $cookies{oauth_token_secret} ?
-        $cookies{oauth_token_secret}->value : undef;
-    return $error->( 400, 'No oauth_token_secret cookie' )
-        unless $token_secret;
+    my $token_secret = $req->cookies->{oauth_token_secret}
+        or return error( 400, 'No oauth_token_secret cookie' );
 
-    my $verifier = $param->{oauth_verifier}
-        or return $error->( 400, 'No oauth_verifier' );
+    my $verifier = $req->query_parameters->{oauth_verifier}
+        or return error( 400, 'No oauth_verifier' );
 
     $tp->oauth->request_token( $token );
     $tp->oauth->request_token_secret( $token_secret );
 
+    # Given the request token, token secret, and verifier that TypePad
+    # sent us, request an access token and secret that we can use for
+    # future authenticated calls on behalf of this user.
     my( $access_token, $access_token_secret ) =
         $tp->oauth->request_access_token( verifier => $verifier );
     $tp->access_token( $access_token );
@@ -301,30 +261,37 @@ my $login_cb = sub {
         $access_token,
         $access_token_secret,
     );
-    
-    my $token_cookie = CGI::Cookie->new(
-        -name       => 'oauth_token_secret',
-        -value      => '',
-        -expires    => '-1y',
-    );
-    
-    my $session_cookie = CGI::Cookie->new(
-        -name       => 'session_person_id',
-        -value      => person_to_session_cookie( $person->{person_id} ),
-        -expires    => '+30d',
-    );
 
-    return [
-        302,
-        [
-            Location        => '/',
-            'Set-Cookie'    => "$token_cookie",
-            'Set-Cookie'    => "$session_cookie",
-        ],
-    ];
+    # Now store the user's person ID in the session.
+    $req->session->{person_id} = $person->{person_id};
+
+    my $res = Plack::Response->new;
+    $res->redirect( $req->uri_for( '/' ) );
+
+    # Remove the request token secret cookie that we created above.
+    $res->cookies->{oauth_token_secret} = {
+        value   => '',
+        expires => time - 24 * 60 * 60,
+    };
+
+    return $res->finalize;    
+};
+
+my $logout = sub {
+    my $req = Plack::Request->new( shift );
+
+    # Kill the session.
+    $req->env->{'psgix.session'} = {};
+
+    my $res = Plack::Response->new;
+    $res->redirect( $req->uri_for( '/' ) );
+    return $res->finalize;
 };
 
 builder {
+    my $secret = Tiptop::Util->config->{app}{session_secret};
+    enable 'Session::Cookie', secret => $secret;
+
     mount '/static' => builder {
         Plack::App::File->new( { root => './static' } );
     };
@@ -334,6 +301,7 @@ builder {
 
     mount '/login' => $login;
     mount '/login-callback' => $login_cb;
+    mount '/logout' => $logout;
 
     mount '/favicon.ico' => sub { return $error->( 404, "not found" ) };
 };

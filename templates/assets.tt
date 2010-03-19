@@ -43,7 +43,7 @@
         $( '#more-button' ).bind( 'click', function( e ) {
             e.preventDefault();
             currentOffset += 20;
-            $.get( '[% uri %]', { offset: currentOffset, format: 'partial' }, function( data ) {
+            $.get( '[% request.uri %]', { offset: currentOffset, format: 'partial' }, function( data ) {
                 $( '#assets-container' ).append( data );
             } );
         } );
@@ -74,9 +74,9 @@
                     Dashboard
                     <div class="login">
 [%- IF remote_user %]
-                        Hi, <a href="http://profile.typepad.com/[% remote_user.api_id | html %]">[% remote_user.display_name | html %]</a>!
+                        Hi, <a href="http://profile.typepad.com/[% remote_user.api_id | html %]">[% remote_user.display_name | html %]</a>! <a href="/logout">(Sign out)</a>
 [%- ELSE %]
-                        <a href="/login">Login</a>
+                        <a href="/login">Sign in</a>
 [%- END %]
                     </div>
                 </div>
