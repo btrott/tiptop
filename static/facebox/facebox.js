@@ -60,8 +60,8 @@
  *   $(document).bind('reveal.facebox', function() { ...stuff to do after the facebox and contents are revealed... })
  *
  */
-(function($) {
-  $.facebox = function(data, klass) {
+(($ => {
+  $.facebox = (data, klass) => {
     $.facebox.loading()
 
     if (data.ajax) fillFaceboxFromAjax(data.ajax)
@@ -112,7 +112,7 @@
     </div>'
     },
 
-    loading: function() {
+    loading() {
       init()
       if ($('#facebox .loading').length == 1) return true
       showOverlay()
@@ -126,14 +126,14 @@
         left:	385.5
       }).show()
 
-      $(document).bind('keydown.facebox', function(e) {
+      $(document).bind('keydown.facebox', e => {
         if (e.keyCode == 27) $.facebox.close()
         return true
       })
       $(document).trigger('loading.facebox')
     },
 
-    reveal: function(data, klass) {
+    reveal(data, klass) {
       $(document).trigger('beforeReveal.facebox')
       if (klass) $('#facebox .content').addClass(klass)
       $('#facebox .content').append(data)
@@ -143,7 +143,7 @@
       $(document).trigger('reveal.facebox').trigger('afterReveal.facebox')
     },
 
-    close: function() {
+    close() {
       $(document).trigger('close.facebox')
       return false
     }
@@ -204,7 +204,8 @@
   
   // getPageScroll() by quirksmode.com
   function getPageScroll() {
-    var xScroll, yScroll;
+    var xScroll;
+    var yScroll;
     if (self.pageYOffset) {
       yScroll = self.pageYOffset;
       xScroll = self.pageXOffset;
@@ -215,7 +216,7 @@
       yScroll = document.body.scrollTop;
       xScroll = document.body.scrollLeft;	
     }
-    return new Array(xScroll,yScroll) 
+    return new Array(xScroll,yScroll)
   }
 
   // Adapted from getPageSize() by quirksmode.com
@@ -264,14 +265,14 @@
 
   function fillFaceboxFromImage(href, klass) {
     var image = new Image()
-    image.onload = function() {
+    image.onload = () => {
       $.facebox.reveal('<div class="image"><img src="' + image.src + '" /></div>', klass)
     }
     image.src = href
   }
 
   function fillFaceboxFromAjax(href, klass) {
-    $.get(href, function(data) { $.facebox.reveal(data, klass) })
+    $.get(href, data => { $.facebox.reveal(data, klass) })
   }
 
   function skipOverlay() {
@@ -286,7 +287,7 @@
 
     $('#facebox_overlay').hide().addClass("facebox_overlayBG")
       .css('opacity', $.facebox.settings.opacity)
-      .click(function() { $(document).trigger('close.facebox') })
+      .click(() => { $(document).trigger('close.facebox') })
       .fadeIn(200)
     return false
   }
@@ -294,7 +295,7 @@
   function hideOverlay() {
     if (skipOverlay()) return
 
-    $('#facebox_overlay').fadeOut(200, function(){
+    $('#facebox_overlay').fadeOut(200, () => {
       $("#facebox_overlay").removeClass("facebox_overlayBG")
       $("#facebox_overlay").addClass("facebox_hide") 
       $("#facebox_overlay").remove()
@@ -307,13 +308,13 @@
    * Bindings
    */
 
-  $(document).bind('close.facebox', function() {
+  $(document).bind('close.facebox', () => {
     $(document).unbind('keydown.facebox')
-    $('#facebox').fadeOut(function() {
+    $('#facebox').fadeOut(() => {
       $('#facebox .content').removeClass().addClass('content')
       hideOverlay()
       $('#facebox .loading').remove()
     })
   })
 
-})(jQuery);
+}))(jQuery);

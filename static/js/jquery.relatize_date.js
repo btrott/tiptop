@@ -1,14 +1,12 @@
 // All credit goes to Rick Olson.
-(function($) {
+(($ => {
   $.fn.relatizeDate = function() {
     return $(this).each(function() {
       $(this).text( $.relatizeDate(this) )
     })
   }
 
-  $.relatizeDate = function(element) {
-    return $.relatizeDate.timeAgoInWords( new Date($(element).text()) )
-  }
+  $.relatizeDate = element => $.relatizeDate.timeAgoInWords( new Date($(element).text()) )
 
   // shortcut
   $r = $.relatizeDate
@@ -24,16 +22,18 @@
      * Example: Time.now().strftime("%B %d, %Y") => February 11, 2008
      * @param {String} format The formatted string used to format the results
      */
-    strftime: function(date, format) {
-      var day = date.getDay(), month = date.getMonth();
-      var hours = date.getHours(), minutes = date.getMinutes();
+    strftime(date, format) {
+      var day = date.getDay();
+      var month = date.getMonth();
+      var hours = date.getHours();
+      var minutes = date.getMinutes();
 
-      var pad = function(num) { 
+      var pad = num => { 
         var string = num.toString(10);
         return new Array((2 - string.length) + 1).join('0') + string
       };
 
-      return format.replace(/\%([aAbBcdHImMpSwyY])/g, function(part) {
+      return format.replace(/\%([aAbBcdHImMpSwyY])/g, part => {
         switch(part[1]) {
           case 'a': return $r.shortDays[day]; break;
           case 'A': return $r.days[day]; break;
@@ -51,10 +51,10 @@
           case 'y': return pad(date.getFullYear() % 100); break;
           case 'Y': return date.getFullYear().toString(); break;
         }
-      })
+      });
     },
   
-    timeAgoInWords: function(targetDate, includeTime) {
+    timeAgoInWords(targetDate, includeTime) {
       return $r.distanceOfTimeInWords(targetDate, new Date(), includeTime);
     },
   
@@ -65,7 +65,7 @@
      * @param {Date} toTime The end date to use in the calculation
      * @param {Boolean} Include the time in the output
      */
-    distanceOfTimeInWords: function(fromTime, toTime, includeTime) {
+    distanceOfTimeInWords(fromTime, toTime, includeTime) {
       var delta = parseInt((toTime.getTime() - fromTime.getTime()) / 1000);
       if (delta < 60) {
           return 'less than a minute ago';
@@ -91,4 +91,4 @@
       }
     }
   })
-})(jQuery);
+}))(jQuery);
